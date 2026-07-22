@@ -1,8 +1,8 @@
-function ClassCard() {
+function ClassCard(props) {
     return (
         <div>
-            <h3>Vinyasa flow</h3>
-            <p>18:00 · 60 λεπτά</p>
+            <h3>{props.name}</h3>
+            <p>{props.time}</p>
         </div>
     )
 }
