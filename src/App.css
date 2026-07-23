@@ -24,3 +24,8 @@ h1 {
   font-size: 14px;
   color: #7c8b93;
 }
+
+.badge-low {
+  background: #fde8ef;
+  color: #b3436e;
+}

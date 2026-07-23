@@ -5,7 +5,7 @@ function App() {
   const classes = [
     { id: 1, name: "Vinyasa 1-2", time: "09:00 · 90 λεπτά", spots: 6 },
     { id: 2, name: "Wall  Yoga (Iyengar)", time: "16:45 · 90 λεπτά", spots: 3 },
-    { id: 3, name: "Vinyasa 3", time: "18:30 · 90 λεπτά", spots: 8  },
+    { id: 3, name: "Vinyasa 3", time: "18:30 · 90 λεπτά", spots: 2  },
     { id: 4, name: "Meditation", time: "0:00 · 45 λεπτά", spots: 10 },
   ]
 
