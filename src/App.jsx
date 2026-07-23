@@ -25,12 +25,24 @@ function App() {
     fetchClasses()
   }, [])
 
-  function handleBook(id) {
-    setClasses(
-      classes.map((c) =>
-        c.id === id && c.spots > 0 ? { ...c, spots: c.spots - 1 } : c
+  async function handleBook(id) {
+    const target = classes.find((c) => c.id === id)
+    if (!target || target.spots <= 0) return
+
+    const newSpots = target.spots -1
+
+    const { error } = await supabase
+      .from('classes')
+      .update({ spots: newSpots })
+      .eq('id', id)
+
+      if (error) {
+        console.error('Σφάλμα κατά την κράτηση:', error.message)
+        return
+      }
+      setClasses(
+        classes.map((c) => (c.id === id ? { ...c, spots: newSpots } : c))
       )
-    )
   }
 
   return (
