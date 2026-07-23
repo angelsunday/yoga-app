@@ -29,3 +29,22 @@ h1 {
   background: #fde8ef;
   color: #b3436e;
 }
+
+.book-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #92d1bc;
+  color: #1f4a42;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.book-btn:disabled {
+  background: #e4e9e8;
+  color: #9aa5a3;
+  cursor: not-allowed;
+}
