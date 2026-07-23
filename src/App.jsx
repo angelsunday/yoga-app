@@ -2,10 +2,26 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import ClassCard from './ClassCard'
 import { supabase } from './supabaseClient'
+import Auth from './Auth'
 
 function App() {
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session)
+      }
+    )
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     async function fetchClasses() {
@@ -45,26 +61,40 @@ function App() {
       )
   }
 
-  return (
-    <div>
-      <h1>Yoga Class Chania</h1>
-      <p>Κλείσε το μάθημά σου με την Αγγελική.</p>
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+  }
 
-      {loading ? (
+    return (
+      <div>
+        <h1>Yoga Class Chania</h1>
+
+        {!session ? (
+          <Auth />
+        ) : (
+          <>
+
+          <p>Συνδεδεμενος/η ως {session.user.email}{''}
+          <button className="link-btn" onClick={handleSignOut}>Αποσύνδεση</button>
+          </p>
+
+        {loading ? (
         <p>Φόρτωση μαθημάτων…</p>
-      ) : (
-        classes.map((c) => (
-          <ClassCard
-            key={c.id}
-            name={c.name}
-            time={c.time}
-            spots={c.spots}
-            onBook={() => handleBook(c.id)}
-          />
-        ))
-      )}
-    </div>
-  )
+        ) : (
+          classes.map((c) => (
+            <ClassCard
+              key={c.id}
+              name={c.name}
+              time={c.time}
+              spots={c.spots}
+              onBook={() => handleBook(c.id)}
+            />
+          ))
+        )}
+        </>
+        )}
+      </div>
+)
 }
 
 export default App
