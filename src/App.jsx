@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import ClassCard from "./ClassCard";
+import {
+  fetchClasses,
+  fetchMyBookings,
+  createBooking,
+  deleteBooking,
+  updateClassSpots,
+} from "./api";
 import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
 import MyBookings from "./MyBookings";
+import ClassList from "./ClassList";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -11,145 +19,96 @@ function App() {
   const [session, setSession] = useState(null);
   const [myBookings, setMyBookings] = useState([]);
 
+  //--Auth: read the session once, then listen for login/logout
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      },
+      (_event, newSession) => setSession(newSession),
     );
 
+    //Cleanup: Stop listening when the component unmounts
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  //--Load the class schedule once, when the app starts--
   useEffect(() => {
-    async function fetchClasses() {
-      const { data, error } = await supabase
-        .from("classes")
-        .select("*")
-        .order("id");
-
-      if (error) {
-        console.error("Σφάλμα:", error.message);
-      } else {
-        setClasses(data);
-      }
+    async function load() {
+      const { data, error } = await fetchClasses();
+      if (error) console.error("Σφάλμα φόρτωσης:", error.message);
+      else setClasses(data);
       setLoading(false);
     }
-
-    fetchClasses();
+    load();
   }, []);
 
+  //--Load the user's bookings; re-runs whenever the session changes--
   useEffect(() => {
     if (!session) {
       setMyBookings([]);
       return;
     }
 
-    async function fetchMyBookings() {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("id, class_id, classes(name, time)")
-        .order("created_at");
-
-      if (error) {
-        console.error("Σφάλμα:", error.message);
-      } else {
-        setMyBookings(data);
-      }
+    async function load() {
+      const { data, error } = await fetchMyBookings();
+      if (error) console.error("Σφάλμα κρατήσεων: ", error.message);
+      else setMyBookings(data);
     }
-    fetchMyBookings();
+    load();
   }, [
     session,
   ]); /*«τρέξε κάθε φορά που αλλάζει το session» — δηλαδή όταν συνδέεται ή αποσυνδέεται κάποιος. Λογικό: άλλος χρήστης, άλλες κρατήσεις.*/
 
-  // Books a class for the logged-in user:
-  // 1) inserts a booking row, 2) decreases the class spots,
-  // 3) updates both lists on screen.
+  // --- Book a class: save to DB first, then update the screen ---
   async function handleBook(id) {
     const target = classes.find((c) => c.id === id);
     if (!target || target.spots <= 0) return;
 
-    // Insert the booking AND ask supabase to return the new row
-    // joined with its class data, so we can show it immediately
-    const { data: newBooking, error: bookingError } = await supabase
-      .from("bookings")
-      .insert({ user_id: session.user.id, class_id: id })
-      .select("id, class_id, classes(name, time)")
-      .single();
+    const { data: newBooking, error } = await createBooking(
+      session.user.id,
+      id,
+    );
 
-    if (bookingError) {
-      //23505 = Postgres "unique violation" -> user already booked this class
-      if (bookingError.code === "23505") {
-        alert("Έχετε ήδη κάνει κράτηση για αυτό το μάθημα.");
-      } else {
-        console.error("Σφάλμα κατά την κράτηση:", bookingError.message);
-      }
+    if (error) {
+      //23505 = Postgres unique violation -> already booked
+      if (error.code === "23505") alert("Έχεις ήδη κλείσει αυτό το μάθημα.");
+      else console.error("Σφάλμα κράτησης: ", error.message);
       return;
     }
 
-    // Decrease the class spots (-1)
     const newSpots = target.spots - 1;
-    const { error: spotsError } = await supabase
-      .from("classes")
-      .update({ spots: newSpots })
-      .eq("id", id);
+    await updateClassSpots(id, newSpots);
 
-    if (spotsError) {
-      console.error(
-        "Σφάλμα κατά την ενημέρωση των θέσεων:",
-        spotsError.message,
-      );
-      return;
-    }
-
-    // Update the classes list on screen
     setClasses(
       classes.map((c) => (c.id === id ? { ...c, spots: newSpots } : c)),
     );
-
-    //Add the new booking to "My bookings" (append to the array)
     setMyBookings([...myBookings, newBooking]);
   }
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-  }
-
-  // Cancels a booking: deletes the booking row, gives the spot back
-  // to the class, and removes it from the on-screen list.
+  //--Cancel a booking: delete it then give the spot back--
   async function handleCancel(bookingId, classId) {
-    // 1. Delete the booking row from the database
-    const { error } = await supabase
-      .from("bookings")
-      .delete()
-      .eq("id", bookingId);
-
+    const { error } = await deleteBooking(bookingId);
     if (error) {
-      console.error("Σφάλμα κατά την ακύρωση της κράτησης:", error.message);
-      return; // stop here — don't touch the UI if the DB failed
+      console.error("Σφάλμα ακύρωσης: ", error.message);
+      return;
     }
 
-    // 2. Give the spot back to the class (+1)
     const target = classes.find((c) => c.id === classId);
     if (target) {
       const newSpots = target.spots + 1;
-      await supabase
-        .from("classes")
-        .update({ spots: newSpots })
-        .eq("id", classId);
-
-      // Update the classes list on screen with the new spot count
+      await updateClassSpots(classId, newSpots);
       setClasses(
         classes.map((c) => (c.id === classId ? { ...c, spots: newSpots } : c)),
       );
     }
 
-    // 3. Remove this booking from "My bookings" (filter = new list without it)
     setMyBookings(myBookings.filter((b) => b.id !== bookingId));
+  }
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
   }
 
   return (
@@ -170,19 +129,7 @@ function App() {
 
           <MyBookings bookings={myBookings} onCancel={handleCancel} />
 
-          {loading ? (
-            <p>Φόρτωση μαθημάτων…</p>
-          ) : (
-            classes.map((c) => (
-              <ClassCard
-                key={c.id}
-                name={c.name}
-                time={c.time}
-                spots={c.spots}
-                onBook={() => handleBook(c.id)}
-              />
-            ))
-          )}
+          <ClassList classes={classes} loading={loading} onBook={handleBook} />
         </>
       )}
     </div>
