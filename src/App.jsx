@@ -45,20 +45,34 @@ function App() {
     const target = classes.find((c) => c.id === id)
     if (!target || target.spots <= 0) return
 
-    const newSpots = target.spots -1
+    const { error: bookingError } = await supabase
+      .from('bookings')
+      .insert({ user_id: session.user.id, class_id: id })
 
-    const { error } = await supabase
+    if (bookingError) {
+      if (booking.Error.code === '23505') {
+        alert('Έχετε ήδη κάνει κράτηση για αυτό το μάθημα.')
+      } else {
+        console.error('Σφάλμα κατά την κράτηση:', bookingError.message)
+      }
+      return
+    }
+
+    const newSpots = target.spots - 1
+
+    const { error: spotsError } = await supabase
       .from('classes')
       .update({ spots: newSpots })
       .eq('id', id)
 
-      if (error) {
-        console.error('Σφάλμα κατά την κράτηση:', error.message)
-        return
-      }
-      setClasses(
-        classes.map((c) => (c.id === id ? { ...c, spots: newSpots } : c))
-      )
+    if (spotsError) {
+      console.error('Σφάλμα κατά την ενημέρωση των θέσεων:', spotsError.message)
+      return
+    }
+    
+    setClasses(
+      classes.map((c) => (c.id === id ? { ...c, spots: newSpots } : c))
+    )
   }
 
   async function handleSignOut() {
