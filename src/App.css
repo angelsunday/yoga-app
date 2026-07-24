@@ -1,6 +1,6 @@
 h1 {
   font-size: 26px;
-  color: #2c5e54;;
+  color: #2c5e54;
 }
 
 .card {
@@ -81,4 +81,36 @@ h1 {
 .auth-msg {
   font-size: 13px;
   color: #b3436e;
+}
+
+.my-bookings {
+  background: #ffffff;
+  border: 1px solid #dcede7;
+  border-left: 4px solid #5cbce0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  max-width: 420px;
+}
+
+.my-bookings h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+.booking-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 8px 0;
+  border-top: 1px solid #f0f5f3;
+}
+
+.cancel-btn {
+  background: none;
+  border: none;
+  color: #b3436e;
+  font-size: 13px;
+  cursor: pointer;
 }
