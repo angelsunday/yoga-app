@@ -53,6 +53,6 @@ export function fetchMyProfile(userId) {
 export function fetchAllBookings() {
   return supabase
     .from("bookings")
-    .select("id, created_at, classes(name,time), profiles(full_name")
+    .select("id, created_at, classes(name,time), profiles(full_name)")
     .order("created_at", { ascending: false });
 }
