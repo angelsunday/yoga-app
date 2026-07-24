@@ -38,3 +38,21 @@ export function deleteBooking(bookingId) {
 export function updateClassSpots(classId, spots) {
   return supabase.from("classes").update({ spots }).eq("id", classId);
 }
+
+//Fetch the profile of the logged-in user (RLS returns only their own row)
+export function fetchMyProfile(userId) {
+  return supabase
+    .from("profiles")
+    .select("role, full_name")
+    .eq("id", userId)
+    .single();
+}
+
+// TEACHER ONLY: fetch every booking with class info and student profile.
+// Works only for teachers thanks to the RLS policy above.q
+export function fetchAllBookings() {
+  return supabase
+    .from("bookings")
+    .select("id, created_at, classes(name,time), profiles(full_name")
+    .order("created_at", { ascending: false });
+}

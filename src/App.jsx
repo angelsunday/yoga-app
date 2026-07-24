@@ -12,12 +12,15 @@ import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
 import MyBookings from "./MyBookings";
 import ClassList from "./ClassList";
+import { fetchMyProfile } from "./api";
+import TeacherDashboard from "./TeacherDashboard";
 
 function App() {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
   const [myBookings, setMyBookings] = useState([]);
+  const [profile, setProfile] = useState(null);
 
   //--Auth: read the session once, then listen for login/logout
   useEffect(() => {
@@ -60,6 +63,20 @@ function App() {
   }, [
     session,
   ]); /*«τρέξε κάθε φορά που αλλάζει το session» — δηλαδή όταν συνδέεται ή αποσυνδέεται κάποιος. Λογικό: άλλος χρήστης, άλλες κρατήσεις.*/
+
+  useEffect(() => {
+    if (!session) {
+      setProfile(null);
+      return;
+    }
+
+    async function load() {
+      const { data, error } = await fetchMyProfile(session.user.id);
+      if (error) console.error("Σφάλμα προφιλ: ", error.message);
+      else setProfile(data);
+    }
+    load();
+  }, [session]);
 
   // --- Book a class: save to DB first, then update the screen ---
   async function handleBook(id) {
@@ -114,22 +131,35 @@ function App() {
   return (
     <div>
       <h1>Yoga Class Chania</h1>
-
+      {/* Not logged in -> show the sign in / sign up form */}
       {!session ? (
         <Auth />
       ) : (
         <>
           <p>
             Συνδεδεμενος/η ως {session.user.email}
-            {""}
+            {profile?.role === "teacher" && " (δασκάλα)"}{" "}
             <button className="link-btn" onClick={handleSignOut}>
               Αποσύνδεση
             </button>
           </p>
 
-          <MyBookings bookings={myBookings} onCancel={handleCancel} />
+          {/* Teachers see the dashboard; clients see the booking view.
+              Note: this only hides the UI — the real rule is enforced
+              by the RLS policy on the bookings table. */}
+          {profile?.role === "teacher" ? (
+            <TeacherDashboard />
+          ) : (
+            <>
+              <MyBookings bookings={myBookings} onCancel={handleCancel} />
 
-          <ClassList classes={classes} loading={loading} onBook={handleBook} />
+              <ClassList
+                classes={classes}
+                loading={loading}
+                onBook={handleBook}
+              />
+            </>
+          )}
         </>
       )}
     </div>
