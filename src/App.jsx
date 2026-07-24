@@ -3,6 +3,7 @@ import "./App.css";
 import ClassCard from "./ClassCard";
 import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
+import MyBookings from "./MyBookings";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -65,16 +66,24 @@ function App() {
     session,
   ]); /*«τρέξε κάθε φορά που αλλάζει το session» — δηλαδή όταν συνδέεται ή αποσυνδέεται κάποιος. Λογικό: άλλος χρήστης, άλλες κρατήσεις.*/
 
+  // Books a class for the logged-in user:
+  // 1) inserts a booking row, 2) decreases the class spots,
+  // 3) updates both lists on screen.
   async function handleBook(id) {
     const target = classes.find((c) => c.id === id);
     if (!target || target.spots <= 0) return;
 
-    const { error: bookingError } = await supabase
+    // Insert the booking AND ask supabase to return the new row
+    // joined with its class data, so we can show it immediately
+    const { data: newBooking, error: bookingError } = await supabase
       .from("bookings")
-      .insert({ user_id: session.user.id, class_id: id });
+      .insert({ user_id: session.user.id, class_id: id })
+      .select("id, class_id, classes(name, time)")
+      .single();
 
     if (bookingError) {
-      if (booking.Error.code === "23505") {
+      //23505 = Postgres "unique violation" -> user already booked this class
+      if (bookingError.code === "23505") {
         alert("Έχετε ήδη κάνει κράτηση για αυτό το μάθημα.");
       } else {
         console.error("Σφάλμα κατά την κράτηση:", bookingError.message);
@@ -82,8 +91,8 @@ function App() {
       return;
     }
 
+    // Decrease the class spots (-1)
     const newSpots = target.spots - 1;
-
     const { error: spotsError } = await supabase
       .from("classes")
       .update({ spots: newSpots })
@@ -97,9 +106,13 @@ function App() {
       return;
     }
 
+    // Update the classes list on screen
     setClasses(
       classes.map((c) => (c.id === id ? { ...c, spots: newSpots } : c)),
     );
+
+    //Add the new booking to "My bookings" (append to the array)
+    setMyBookings([...myBookings, newBooking]);
   }
 
   async function handleSignOut() {
@@ -155,27 +168,7 @@ function App() {
             </button>
           </p>
 
-          {/* "My bookings" section — only shown if the user has at least one */}
-          {myBookings.length > 0 && (
-            <div className="my-bookings">
-              <h2>Οι κρατήσεις μου</h2>
-              {myBookings.map((b) => (
-                // b.classes.name / b.classes.time come from the join
-                // we did in the select() — the booking carries its class data
-                <div key={b.id} className="booking-row">
-                  <span>
-                    <strong>{b.classes.name}</strong> - {b.classes.time}
-                  </span>
-                  <button
-                    className="cancel-btn"
-                    onClick={() => handleCancel(b.id, b.class_id)}
-                  >
-                    Ακύρωση
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <MyBookings bookings={myBookings} onCancel={handleCancel} />
 
           {loading ? (
             <p>Φόρτωση μαθημάτων…</p>
