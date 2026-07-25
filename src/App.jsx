@@ -14,6 +14,8 @@ import MyBookings from "./MyBookings";
 import ClassList from "./ClassList";
 import { fetchMyProfile } from "./api";
 import TeacherDashboard from "./TeacherDashboard";
+import NewClassForm from "./NewClassForm";
+import { createClass } from "./api";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -128,6 +130,20 @@ function App() {
     await supabase.auth.signOut();
   }
 
+  //TEACHER ONLY: create a new class, then add it to the list on the screen
+  async function handleCreateClass(newClass) {
+    const { data, error } = await createClass(newClass);
+
+    if (error) {
+      console.error("Σφάλμα δημιουργίας: ", error.message);
+      alert("Δεν ήταν δυνατή η δημιουργία του μαθήματος");
+      return;
+    }
+
+    //Add the new class to the top of the list
+    setClasses([...classes, data]);
+  }
+
   return (
     <div>
       <h1>Yoga Class Chania</h1>
@@ -148,7 +164,10 @@ function App() {
               Note: this only hides the UI — the real rule is enforced
               by the RLS policy on the bookings table. */}
           {profile?.role === "teacher" ? (
-            <TeacherDashboard />
+            <>
+              <NewClassForm onCreate={handleCreateClass} />
+              <TeacherDashboard />
+            </>
           ) : (
             <>
               <MyBookings bookings={myBookings} onCancel={handleCancel} />

@@ -56,3 +56,9 @@ export function fetchAllBookings() {
     .select("id, created_at, classes(name,time), profiles(full_name)")
     .order("created_at", { ascending: false });
 }
+
+// TEACHER ONLY: create a new class and return the created row,
+// so we can add it to the list on screen without re-fetching.
+export function createClass(newClass) {
+  return supabase.from("classes").insert(newClass).select().single();
+}

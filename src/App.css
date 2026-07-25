@@ -140,3 +140,39 @@ h1 {
   font-size: 13px;
   color: #7c8b93;
 }
+
+.new-class {
+  background: #ffffff;
+  border: 1px solid #dcede7;
+  border-left: 4px solid #92d1bc;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  max-width: 420px;
+}
+
+.new-class h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.new-class input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #dcede7;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.spots-label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: #2c5e54;
+}
+
+.spots-label input {
+  width: 100%;
+  margin-top: 6px;
+}
