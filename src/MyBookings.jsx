@@ -2,6 +2,8 @@
 // This component is "dumb": it knows nothing about the database.
 // It receives the bookings array and a cancel function via props.
 
+import { formatDateTime } from "./format";
+
 function MyBookings({ bookings, onCancel }) {
   // Don't render anything if the user has no bookings
   if (bookings.length === 0) return null;
@@ -14,7 +16,8 @@ function MyBookings({ bookings, onCancel }) {
         // b.classes.name / b.classes.time come from the join in the select()
         <div key={b.id} className="booking-row">
           <span>
-            <strong>{b.classes.name}</strong> - {b.classes.time}
+            <strong>{b.classes.name}</strong> -{" "}
+            {formatDateTime(b.classes.starts_at)}
           </span>
           <button
             className="cancel-btn"

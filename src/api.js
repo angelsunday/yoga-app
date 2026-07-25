@@ -5,9 +5,13 @@ import { supabase } from "./supabaseClient";
 // Every function returns { data, error } — the Supabase convention.
 // ---------------------------------------------------------------
 
-// Fetch all classes, ordered by id
+// Fetch upcoming classes only (starts_at in the future), soonest first
 export function fetchClasses() {
-  return supabase.from("classes").select("*").order("id");
+  return supabase
+    .from("classes")
+    .select("*")
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at");
 }
 
 // Fetch the logged-in user's bookings, joined with their class info.
@@ -15,7 +19,7 @@ export function fetchClasses() {
 export function fetchMyBookings() {
   return supabase
     .from("bookings")
-    .select("id, class_id, classes(name, time)")
+    .select("id, class_id, classes(name, starts_at, duration)")
     .order("created_at");
 }
 
@@ -25,7 +29,7 @@ export function createBooking(userId, classId) {
   return supabase
     .from("bookings")
     .insert({ user_id: userId, class_id: classId })
-    .select("id, class_id, classes(name, time)")
+    .select("id, class_id, classes(name, starts_at, duration)")
     .single();
 }
 
@@ -49,16 +53,15 @@ export function fetchMyProfile(userId) {
 }
 
 // TEACHER ONLY: fetch every booking with class info and student profile.
-// Works only for teachers thanks to the RLS policy above.q
+// Works only for teachers thanks to the RLS policy above.
 export function fetchAllBookings() {
   return supabase
     .from("bookings")
-    .select("id, created_at, classes(name,time), profiles(full_name)")
+    .select("id, created_at, classes(name,starts_at), profiles(full_name)")
     .order("created_at", { ascending: false });
 }
 
-// TEACHER ONLY: create a new class and return the created row,
-// so we can add it to the list on screen without re-fetching.
+// Create a new class (now includes starts_at and duration)
 export function createClass(newClass) {
   return supabase.from("classes").insert(newClass).select().single();
 }

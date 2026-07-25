@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchAllBookings } from "./api";
+import { formatDateTime } from "./format";
 
 // TEACHER VIEW: shows every booking made by every student.
 // Only rendered when the logged-in user has role 'teacher'.
@@ -30,7 +31,8 @@ function TeacherDashboard() {
         bookings.map((b) => (
           <div key={b.id} className="booking-row">
             <span>
-              <strong>{b.classes.name}</strong> - {b.classes.time}
+              <strong>{b.classes.name}</strong> -{" "}
+              {formatDateTime(b.classes.starts_at)}
             </span>
             <span className="student">
               {b.profiles?.full_name || "Χωρίς Όνομα"}

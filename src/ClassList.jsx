@@ -15,7 +15,8 @@ function ClassList({ classes, loading, onBook }) {
         <ClassCard
           key={c.id}
           name={c.name}
-          time={c.time}
+          startsAt={c.starts_at}
+          duration={c.duration}
           spots={c.spots}
           onBook={() => onBook(c.id)}
         />
