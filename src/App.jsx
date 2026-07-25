@@ -16,6 +16,7 @@ import { fetchMyProfile } from "./api";
 import TeacherDashboard from "./TeacherDashboard";
 import NewClassForm from "./NewClassForm";
 import { createClass } from "./api";
+import Header from "./Header";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -146,39 +147,22 @@ function App() {
 
   return (
     <div>
-      <h1>Yoga Class Chania</h1>
+      <Header session={session} profile={profile} onSignOut={handleSignOut} />
+
       {/* Not logged in -> show the sign in / sign up form */}
       {!session ? (
         <Auth />
-      ) : (
+      ) : profile?.role === "teacher" ? (
+        /* Teacher view: create-class form + bookings dashboard */
         <>
-          <p>
-            Συνδεδεμενος/η ως {session.user.email}
-            {profile?.role === "teacher" && " (δασκάλα)"}{" "}
-            <button className="link-btn" onClick={handleSignOut}>
-              Αποσύνδεση
-            </button>
-          </p>
-
-          {/* Teachers see the dashboard; clients see the booking view.
-              Note: this only hides the UI — the real rule is enforced
-              by the RLS policy on the bookings table. */}
-          {profile?.role === "teacher" ? (
-            <>
-              <NewClassForm onCreate={handleCreateClass} />
-              <TeacherDashboard />
-            </>
-          ) : (
-            <>
-              <MyBookings bookings={myBookings} onCancel={handleCancel} />
-
-              <ClassList
-                classes={classes}
-                loading={loading}
-                onBook={handleBook}
-              />
-            </>
-          )}
+          <NewClassForm onCreate={handleCreateClass} />
+          <TeacherDashboard />
+        </>
+      ) : (
+        /* Client view: my bookings + class list */
+        <>
+          <MyBookings bookings={myBookings} onCancel={handleCancel} />
+          <ClassList classes={classes} loading={loading} onBook={handleBook} />
         </>
       )}
     </div>
