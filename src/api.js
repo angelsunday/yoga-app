@@ -57,7 +57,7 @@ export function fetchMyProfile(userId) {
 export function fetchAllBookings() {
   return supabase
     .from("bookings")
-    .select("id, created_at, classes(name,starts_at), profiles(full_name)")
+    .select("id, created_at,paid, classes(name,starts_at), profiles(full_name)")
     .order("created_at", { ascending: false });
 }
 
@@ -69,4 +69,9 @@ export function createClass(newClass) {
 // TEACHER ONLY: delete a class by its id
 export function deleteClass(classId) {
   return supabase.from("classes").delete().eq("id", classId);
+}
+
+// TEACHER ONLY: mark a booking as paid or unpaid
+export function updateBookingPaid(bookingId, paid) {
+  return supabase.from("bookings").update({ paid }).eq("id", bookingId);
 }

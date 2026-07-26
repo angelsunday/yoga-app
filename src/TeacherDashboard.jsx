@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchAllBookings } from "./api";
+import { fetchAllBookings, updateBookingPaid } from "./api";
 import { formatDateTime } from "./format";
 
 // TEACHER VIEW: shows all bookings + the class schedule with delete buttons.
@@ -19,6 +19,20 @@ function TeacherDashboard({ classes, onDeleteClass }) {
   }, []);
 
   if (loading) return <p>Φόρτωση κρατήσεων...</p>;
+
+  async function togglePaid(bookingId, currentPaid) {
+    const { error } = await updateBookingPaid(bookingId, !currentPaid);
+    if (error) {
+      console.error("Σφάλμα πληρωμής: ", error.message);
+      return;
+    }
+    //Update the local list so the change shows immediately
+    setBookings(
+      bookings.map((b) =>
+        b.id === bookingId ? { ...b, paid: !currentPaid } : b,
+      ),
+    );
+  }
 
   return (
     <>
@@ -68,6 +82,12 @@ function TeacherDashboard({ classes, onDeleteClass }) {
               <span className="student">
                 {b.profiles?.full_name || "Χωρίς Όνομα"}
               </span>
+              <button
+                className={b.paid ? "paid-btn paid" : "paid-btn"}
+                onClick={() => togglePaid(b.id, b.paid)}
+              >
+                {b.paid ? "✓ Πληρωμένο" : "Απλήρωτο"}
+              </button>
             </div>
           ))
         )}

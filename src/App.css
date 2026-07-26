@@ -293,3 +293,23 @@ h1 {
   display: block;
   margin-bottom: 12px;
 }
+
+.paid-btn {
+  border: 1px solid #dcede7;
+  background: #ffffff;
+  color: #7c8b93;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+/*Green style when paid*/
+.paid-btn.paid {
+  background: #e8f5ef;
+  border-color: #92d1bc;
+  color: #2c7a5f;
+}
