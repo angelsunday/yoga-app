@@ -17,6 +17,7 @@ import TeacherDashboard from "./TeacherDashboard";
 import NewClassForm from "./NewClassForm";
 import { createClass } from "./api";
 import Header from "./Header";
+import { deleteClass } from "./api";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -144,6 +145,21 @@ function App() {
     //Add the new class to the top of the list
     setClasses([...classes, data]);
   }
+  // TEACHER ONLY: delete a class, with confirmation, then remove it on screen
+  async function handleDeleteClass(classId) {
+    //Ask before deleting-this action is permanents
+    const ok = window.confirm("Σίγουρα θέλεις να διαγράψεις αυτό το μάθημα;");
+    if (!ok) return;
+
+    const { error } = await deleteClass(classId);
+    if (error) {
+      console.error("Σφάλμα διαγραφής:", error.message);
+      alert("Δεν ήταν δυνατή η διαγραφή.");
+      return;
+    }
+    //Remove it from list on screen
+    setClasses(classes.filter((c) => c.id !== classId));
+  }
 
   return (
     <div>
@@ -156,7 +172,10 @@ function App() {
         /* Teacher view: create-class form + bookings dashboard */
         <>
           <NewClassForm onCreate={handleCreateClass} />
-          <TeacherDashboard />
+          <TeacherDashboard
+            classes={classes}
+            onDeleteClass={handleDeleteClass}
+          />
         </>
       ) : (
         /* Client view: my bookings + class list */

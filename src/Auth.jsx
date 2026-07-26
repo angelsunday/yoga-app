@@ -42,6 +42,7 @@ function Auth() {
   return (
     <div className="auth-box">
       <h2>Σύνδεση / Εγγραφή</h2>
+      <p className="auth-subtitle">Yoga Class Chania</p>
 
       <input
         type="text"

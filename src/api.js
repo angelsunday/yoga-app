@@ -65,3 +65,8 @@ export function fetchAllBookings() {
 export function createClass(newClass) {
   return supabase.from("classes").insert(newClass).select().single();
 }
+
+// TEACHER ONLY: delete a class by its id
+export function deleteClass(classId) {
+  return supabase.from("classes").delete().eq("id", classId);
+}

@@ -7,7 +7,13 @@ function ClassList({ classes, loading, onBook }) {
   if (loading) return <p>Φόρτωση μαθημάτων...</p>;
 
   //Handle the case where the studio has no classes yet
-  if (classes.length === 0) return <p>Δεν υπάρχουν διαθέσιμα μαθήματα.</p>;
+  if (classes.length === 0)
+    return (
+      <div className="empty-state">
+        <span className="emoji">🧘</span>
+        Δεν υπάρχουν προγραμματισμένα μαθήματα αυτή τη στιγμή
+      </div>
+    );
 
   return (
     <div>
