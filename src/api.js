@@ -96,3 +96,26 @@ export function createPrivateSlot(slot) {
 export function deletePrivateSlot(slotId) {
   return supabase.from("private_slots").delete().eq("id", slotId);
 }
+
+// CLIENT: book an open slot — set status to 'booked' and record who booked it.
+// The .eq('status','open') guard prevents booking a slot someone just took.
+
+export function bookPrivateSlot(slotId, userId) {
+  return supabase
+    .from("private_slots")
+    .update({ status: "booked", booked_by: userId })
+    .eq("id", slotId)
+    .eq("status", "open")
+    .select()
+    .single();
+}
+
+//CLIENT: cancel their own slot booking - set it back to 'open'
+export function cancelPrivateSlot(slotId) {
+  return supabase
+    .from("private_slots")
+    .update({ status: "open", booked_by: null })
+    .eq("id", slotId)
+    .select()
+    .single();
+}

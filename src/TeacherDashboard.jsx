@@ -4,7 +4,7 @@ import { formatDateTime } from "./format";
 
 // TEACHER VIEW: shows all bookings + the class schedule with delete buttons.
 // Classes and the delete handler come from App via props.
-function TeacherDashboard({ classes, onDeleteClass }) {
+function TeacherDashboard({ classes, onDeleteClass, slots, onDeleteSlot }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +62,34 @@ function TeacherDashboard({ classes, onDeleteClass }) {
         )}
       </div>
 
-      {/* --- Card 2: all student bookings --- */}
+      {/* --- Card 2: private lesson slots --- */}
+      <div className="dashboard">
+        <h2>Ελεύθερες ώρες (ιδιωτικά)</h2>
+
+        {slots.length === 0 ? (
+          <div className="empty-state">
+            <span className="emoji">🕐</span>
+            Δεν έχεις ανοίξει ελεύθερες ώρες.
+          </div>
+        ) : (
+          slots.map((s) => (
+            <div key={s.id} className="booking-row">
+              <span>
+                {formatDateTime(s.starts_at)} · {s.duration} λεπτά
+                {/* Show whether the slot is taken and by whom is added later */}
+                {s.status === "booked" && (
+                  <span className="badge badge-low"> Κλεισμένο</span>
+                )}
+              </span>
+              <button className="cancel-btn" onClick={() => onDeleteSlot(s.id)}>
+                Διαγραφή
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* --- Card 3: all student bookings --- */}
       <div className="dashboard">
         <h2>Κρατήσεις Πελατών</h2>
         <p className="dash-count">Σύνολο κρατήσεων: {bookings.length}</p>

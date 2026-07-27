@@ -14,6 +14,8 @@ import {
   fetchPrivateSlots,
   createPrivateSlot,
   deletePrivateSlot,
+  bookPrivateSlot,
+  cancelPrivateSlot,
 } from "./api";
 import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
@@ -23,6 +25,7 @@ import TeacherDashboard from "./TeacherDashboard";
 import NewClassForm from "./NewClassForm";
 import Header from "./Header";
 import NewSlotForm from "./NewSlotForm";
+import PrivateSlots from "./PrivateSlots";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -200,6 +203,26 @@ function App() {
     setSlots(slots.filter((s) => s.id !== slotId));
   }
 
+  //CLIENT: book an open private slot
+  async function handleBookSlot(slotId) {
+    const { data, error } = await bookPrivateSlot(slotId, session.user.id);
+    if (error || !data) {
+      alert("Αυτή η ώρα μόλις κλείστηκε από κάποιον άλλον.");
+      return;
+    }
+    // Update the slot in local state
+    setSlots(slots.map((s) => (s.id === slotId ? data : s)));
+  }
+  // CLIENT: cancel their private slot booking
+  async function handleCancelSlot(slotId) {
+    const { data, error } = await cancelPrivateSlot(slotId);
+    if (error) {
+      console.error("Σφάλμα ακύρωσης ώρας: ", error.message);
+      return;
+    }
+    setSlots(slots.map((s) => (s.id === slotId ? data : s)));
+  }
+
   return (
     <div>
       <Header session={session} profile={profile} onSignOut={handleSignOut} />
@@ -223,6 +246,12 @@ function App() {
         /* Client view: my bookings + class list */
         <>
           <MyBookings bookings={myBookings} onCancel={handleCancel} />
+          <PrivateSlots
+            slots={slots}
+            userId={session.user.id}
+            onBook={handleBookSlot}
+            onCancel={handleCancelSlot}
+          />
           <ClassList classes={classes} loading={loading} onBook={handleBook} />
         </>
       )}
