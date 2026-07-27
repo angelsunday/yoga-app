@@ -82,7 +82,7 @@ export function updateBookingPaid(bookingId, paid) {
 export function fetchPrivateSlots() {
   return supabase
     .from("private_slots")
-    .select("id, starts_at, duration, status, booked_by")
+    .select("id, starts_at, duration, status, booked_by, profiles(full_name)")
     .gte("starts_at", new Date().toISOString())
     .order("starts_at");
 }

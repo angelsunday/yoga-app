@@ -78,7 +78,10 @@ function TeacherDashboard({ classes, onDeleteClass, slots, onDeleteSlot }) {
                 {formatDateTime(s.starts_at)} · {s.duration} λεπτά
                 {/* Show whether the slot is taken and by whom is added later */}
                 {s.status === "booked" && (
-                  <span className="badge badge-low"> Κλεισμένο</span>
+                  <span className="badge badge-low">
+                    {" "}
+                    Κλεισμένο -{s.profiles?.full_name || "άγνωστος"}
+                  </span>
                 )}
               </span>
               <button className="cancel-btn" onClick={() => onDeleteSlot(s.id)}>
