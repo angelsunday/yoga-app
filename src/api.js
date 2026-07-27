@@ -75,3 +75,24 @@ export function deleteClass(classId) {
 export function updateBookingPaid(bookingId, paid) {
   return supabase.from("bookings").update({ paid }).eq("id", bookingId);
 }
+
+// --- Private slots ---
+
+// Fetch upcoming private slots (future only), soonest first
+export function fetchPrivateSlots() {
+  return supabase
+    .from("private_slots")
+    .select("id, starts_at, duration, status, booked_by")
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at");
+}
+
+//TEACHER ONLY: open a new private slot
+export function createPrivateSlot(slot) {
+  return supabase.from("private_slots").insert(slot).select().single();
+}
+
+//TEACHER ONLY: delete a private slot
+export function deletePrivateSlot(slotId) {
+  return supabase.from("private_slots").delete().eq("id", slotId);
+}

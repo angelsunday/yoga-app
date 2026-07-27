@@ -7,17 +7,22 @@ import {
   createBooking,
   deleteBooking,
   updateClassSpots,
+  fetchMyProfile,
+  fetchAllBookings,
+  createClass,
+  deleteClass,
+  fetchPrivateSlots,
+  createPrivateSlot,
+  deletePrivateSlot,
 } from "./api";
 import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
 import MyBookings from "./MyBookings";
 import ClassList from "./ClassList";
-import { fetchMyProfile } from "./api";
 import TeacherDashboard from "./TeacherDashboard";
 import NewClassForm from "./NewClassForm";
-import { createClass } from "./api";
 import Header from "./Header";
-import { deleteClass } from "./api";
+import NewSlotForm from "./NewSlotForm";
 
 function App() {
   const [classes, setClasses] = useState([]);
@@ -25,6 +30,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [myBookings, setMyBookings] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [slots, setSlots] = useState([]);
 
   //--Auth: read the session once, then listen for login/logout
   useEffect(() => {
@@ -73,7 +79,6 @@ function App() {
       setProfile(null);
       return;
     }
-
     async function load() {
       const { data, error } = await fetchMyProfile(session.user.id);
       if (error) console.error("Σφάλμα προφιλ: ", error.message);
@@ -81,6 +86,16 @@ function App() {
     }
     load();
   }, [session]);
+
+  //Load upcoming private slots once, when the app starts
+  useEffect(() => {
+    async function load() {
+      const { data, error } = await fetchPrivateSlots();
+      if (error) console.error("Σφάλμα slots: ", error.message);
+      else setSlots(data);
+    }
+    load();
+  }, []);
 
   // --- Book a class: save to DB first, then update the screen ---
   async function handleBook(id) {
@@ -161,6 +176,30 @@ function App() {
     setClasses(classes.filter((c) => c.id !== classId));
   }
 
+  //TEACHER: open a new private slot
+  async function handleCreateSlot(slot) {
+    const { data, error } = await createPrivateSlot(slot);
+    if (error) {
+      console.error("Σφάλμα δημιουργίας ώρας: ", error.message);
+      alert("Δεν ήταν δυνατό το άνοιγμα της ώρας.");
+      return;
+    }
+    setSlots([...slots, data]);
+  }
+
+  //TEACHER: delete a private slot (with confirmation)
+  async function handleDeleteSlot(slotId) {
+    const ok = window.confirm("Σίγουρα θέλεις να διαγράψεις αυτή την ώρα;");
+    if (!ok) return;
+
+    const { error } = await deletePrivateSlot(slotId);
+    if (error) {
+      console.error("Σφάλμα διαγραφής ώρας: ", error.message);
+      return;
+    }
+    setSlots(slots.filter((s) => s.id !== slotId));
+  }
+
   return (
     <div>
       <Header session={session} profile={profile} onSignOut={handleSignOut} />
@@ -172,9 +211,12 @@ function App() {
         /* Teacher view: create-class form + bookings dashboard */
         <>
           <NewClassForm onCreate={handleCreateClass} />
+          <NewSlotForm onCreate={handleCreateSlot} />
           <TeacherDashboard
             classes={classes}
             onDeleteClass={handleDeleteClass}
+            slots={slots}
+            onDeleteSlot={handleDeleteSlot}
           />
         </>
       ) : (

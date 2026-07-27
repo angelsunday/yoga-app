@@ -54,12 +54,15 @@ function NewClassForm({ onCreate }) {
         />
       </label>
 
-      <input
-        type="number"
-        placeholder="Διάρκεια σε λεπτά (π.χ 90)"
-        value={duration}
-        onChange={(e) => setDuration(e.target.value)}
-      />
+      <label className="field-label">
+        Διάρκεια
+        <input
+          type="number"
+          placeholder="Διάρκεια σε λεπτά (π.χ 90)"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        />
+      </label>
 
       <label className="spots-label">
         Θέσεις: {spots}

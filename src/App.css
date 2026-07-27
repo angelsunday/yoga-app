@@ -207,6 +207,15 @@ h1 {
   font-size: 14px;
 }
 
+.new-class input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #dcede7;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
 .spots-label {
   display: block;
   font-size: 14px;
